@@ -80,16 +80,21 @@ export default class App extends Component<{}, AppState> {
       .setCallback(async (data) => {
         if (data.action === google.picker.Action.PICKED) {
           const selectedDocument = data.docs[0];
-          const list = await gapi.client.drive.permissions.list({
-            fileId: selectedDocument.id,
-            supportsAllDrives: true,
-            fields: '*',
-          });
-          this.setState({
-            selectedDocument,
-            selectedDocumentPermissions: list.result,
-            result: null,
-          });
+          try {
+            const list = await gapi.client.drive.permissions.list({
+              fileId: selectedDocument.id,
+              supportsAllDrives: true,
+              fields: '*',
+            });
+            this.setState({
+              selectedDocument,
+              selectedDocumentPermissions: list.result,
+              result: null,
+            });
+          } catch (e: any) {
+            alert(e.result.error.message);
+            console.error(e);
+          }
         }
       })
       .build()

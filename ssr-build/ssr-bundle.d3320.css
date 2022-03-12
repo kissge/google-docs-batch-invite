@@ -1,6 +1,7 @@
+@import url(https://fonts.googleapis.com/css2?family=Noto+Sans+JP&display=swap);
 * {
   box-sizing: border-box;
-  font-family: 'Noto Sans', sans-serif;
+  font-family: 'Noto Sans JP', sans-serif;
 }
 
 main {
@@ -92,4 +93,4 @@ select {
 }
 
 
-/*# sourceMappingURL=ssr-bundle.63e54.css.map*/
+/*# sourceMappingURL=ssr-bundle.d3320.css.map*/

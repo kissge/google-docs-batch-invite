@@ -1,6 +1,15 @@
 # google-docs-batch-invite
 
 ## CLI Commands
+
+```sh
+$ export CLIENT_ID=xxxx
+$ export APP_ID=xxxx
+$ export DEVELOPER_KEY=xxxx
+$ export PUBLIC_PATH=/xxxx/
+$ export NODE_OPTIONS=--openssl-legacy-provider # if node >= 17
+```
+
 *   `npm install`: Installs dependencies
 
 *   `npm run dev`: Run a development, HMR server

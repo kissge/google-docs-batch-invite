@@ -1,6 +1,9 @@
 {
-  "private": true,
   "name": "google-docs-batch-invite",
+  "author": {
+    "name": "Yusuke Kido",
+    "email": "mail@yusuk.eki.do"
+  },
   "version": "0.0.0",
   "license": "MIT",
   "scripts": {
@@ -22,11 +25,13 @@
   },
   "dependencies": {
     "preact": "^10.3.1",
-    "preact-render-to-string": "^5.1.4",
-    "preact-router": "^3.2.1"
+    "preact-render-to-string": "^5.1.4"
   },
   "devDependencies": {
     "@types/enzyme": "^3.10.5",
+    "@types/gapi": "^0.0.41",
+    "@types/gapi.client.drive": "^3.0.13",
+    "@types/google.picker": "^0.0.39",
     "@types/jest": "^26.0.8",
     "@typescript-eslint/eslint-plugin": "^2.25.0",
     "@typescript-eslint/parser": "^2.25.0",

@@ -1,6 +1,7 @@
 import { Component, h, Fragment } from 'preact';
+import { IntlProvider, Text, Localizer, translate } from 'preact-i18n';
 import { config } from './config';
-import { type AppState, Role } from './types';
+import { type AppState, Role, isLanguage, Languages } from './types';
 
 export default class App extends Component<{}, AppState> {
   state: Readonly<AppState> = {
@@ -14,7 +15,19 @@ export default class App extends Component<{}, AppState> {
     selectedDocumentPermissions: null,
     result: null,
     batchLoading: false,
+    language: '',
+    i18n: {},
   };
+
+  componentWillMount() {
+    for (const languageString of navigator.languages) {
+      const language = languageString.split('-')[0];
+      if (isLanguage(language)) {
+        this.switchLanguage(language);
+        break;
+      }
+    }
+  }
 
   componentDidMount() {
     this.loadExternalScript('https://apis.google.com/js/api.js', () => {
@@ -24,6 +37,7 @@ export default class App extends Component<{}, AppState> {
         this.setState({ isGapiLoaded: true });
       });
     });
+
     this.loadExternalScript('https://accounts.google.com/gsi/client', () => {
       this.setState({
         tokenClient: google.accounts.oauth2.initTokenClient({
@@ -89,13 +103,21 @@ export default class App extends Component<{}, AppState> {
       return;
     }
 
-    if (
-      !confirm(
-        `Are you sure you want to invite ${this.validatedUsers.users.length} users as ${this.state.role} ${
-          this.state.sendNotificationEmail ? 'with' : 'without'
-        } sending notification email?`,
-      )
-    ) {
+    const message = translate(
+      this.state.sendNotificationEmail ? 'batchInvite.confirm.withEmail' : 'batchInvite.confirm.withoutEmail',
+      '',
+      this.state.i18n,
+      {
+        count: this.validatedUsers.users.length,
+        role: this.state.role,
+      },
+      undefined,
+      `Are you sure you want to invite ${this.validatedUsers.users.length} users as ${this.state.role} ${
+        this.state.sendNotificationEmail ? 'with' : 'without'
+      } sending notification email?`,
+    );
+
+    if (!confirm(message)) {
       return;
     }
 
@@ -125,6 +147,21 @@ export default class App extends Component<{}, AppState> {
     });
   }
 
+  async switchLanguage(language: string) {
+    if (!isLanguage(language)) {
+      return;
+    }
+
+    if (language) {
+      const i18n = await import(`../i18n/${language}.json`);
+      // hack: preact-i18n is bullshit
+      i18n.hasOwnProperty = () => true;
+      this.setState({ language, i18n });
+    } else {
+      this.setState({ language, i18n: {} });
+    }
+  }
+
   get validatedUsers() {
     const users = this.state.users
       .split('\n')
@@ -132,13 +169,26 @@ export default class App extends Component<{}, AppState> {
       .filter((user) => user);
 
     if (users.length === 0) {
-      return { isValid: false as const, reason: 'No users' };
+      return {
+        isValid: false as const,
+        reason: translate('validation.empty', '', this.state.i18n, {}, undefined, 'Please specify at least one user.'),
+      };
     }
 
     const invalidUser = users.find((user) => !user.includes('@'));
 
     if (invalidUser) {
-      return { isValid: false as const, reason: invalidUser + ' is an invalid email address' };
+      return {
+        isValid: false as const,
+        reason: translate(
+          'validation.invalid',
+          '',
+          this.state.i18n,
+          { invalidUser },
+          undefined,
+          invalidUser + ' is an invalid email address',
+        ),
+      };
     } else {
       return { isValid: true as const, users };
     }
@@ -148,17 +198,25 @@ export default class App extends Component<{}, AppState> {
     return (
       <div>
         <img src="https://cdnjs.cloudflare.com/ajax/libs/galleriffic/2.0.1/css/loader.gif" />
-        Loading Google API...
+        <Text id="loading">Loading Google API...</Text>
       </div>
     );
   }
 
   renderAuthorize() {
-    return <button onClick={() => this.authorizeAndChoose()}>Authorize and choose a document</button>;
+    return (
+      <button onClick={() => this.authorizeAndChoose()}>
+        <Text id="authorizeAndChooseADocument">Authorize and choose a document</Text>
+      </button>
+    );
   }
 
   renderChoose() {
-    return <button onClick={() => this.choose()}>Choose a document</button>;
+    return (
+      <button onClick={() => this.choose()}>
+        <Text id="chooseADocument">Choose a document</Text>
+      </button>
+    );
   }
 
   renderBatchInvite() {
@@ -177,15 +235,17 @@ export default class App extends Component<{}, AppState> {
               {this.state.selectedDocument.name}
             </a>
           </h2>
-          Last edited:{' '}
-          {new Date(this.state.selectedDocument.lastEditedUtc).toLocaleString(undefined, {
+          <Text id="batchInvite.lastEdited">Last edited</Text>:{' '}
+          {new Date(this.state.selectedDocument.lastEditedUtc).toLocaleString(this.state.language || undefined, {
             dateStyle: 'full',
             timeStyle: 'full',
           })}
         </div>
 
         <div class="current-permissions">
-          <h3>Current permissions</h3>
+          <h3>
+            <Text id="batchInvite.currentPermissions">Current permissions</Text>
+          </h3>
           <ul>
             {this.state.selectedDocumentPermissions.permissions?.map((permission) => (
               <li>
@@ -197,11 +257,14 @@ export default class App extends Component<{}, AppState> {
           </ul>
         </div>
 
-        <textarea
-          value={this.state.users}
-          onInput={(event) => this.setState({ users: (event.target as HTMLTextAreaElement).value })}
-          placeholder="Enter one email address per line"
-        />
+        <Localizer>
+          <textarea
+            value={this.state.users}
+            onInput={(event) => this.setState({ users: (event.target as HTMLTextAreaElement).value })}
+            /** @ts-ignore I hate preact-i18n */
+            placeholder={<Text id="batchInvite.enterOneEmailPerLine">Enter one email address per line</Text>}
+          />
+        </Localizer>
         <div class="validation-result">{!this.validatedUsers.isValid ? this.validatedUsers.reason : ' '}</div>
 
         <div class="wrapper-roles">
@@ -220,12 +283,12 @@ export default class App extends Component<{}, AppState> {
               checked={this.state.sendNotificationEmail}
               onClick={() => this.setState({ sendNotificationEmail: !this.state.sendNotificationEmail })}
             />
-            Notify people (Send Notification Email)
+            <Text id="batchInvite.notifyPeople">Notify people (Send Notification Email)</Text>
           </label>
         </div>
 
         <button onClick={() => this.batchInvite()} disabled={!this.validatedUsers.isValid || this.state.batchLoading}>
-          Batch invite
+          <Text id="batchInvite.batchInvite">Batch invite</Text>
         </button>
         {this.state.batchLoading && (
           <img src="https://cdnjs.cloudflare.com/ajax/libs/galleriffic/2.0.1/css/loader.gif" class="loading" />
@@ -265,12 +328,15 @@ export default class App extends Component<{}, AppState> {
 
         {notReflected.length > 0 && (
           <div class="not-reflected">
-            Although you invited people as {this.state.role}, {notReflected.length} people have different roles.{' '}
+            {/** @ts-ignore I'm not sure this is the right way */}
+            <Text id="notReflected1" fields={{ role: this.state.role, count: notReflected.length }}>
+              Although you invited people as {this.state.role}, {notReflected.length} people have different roles.{' '}
+            </Text>
             <a
               href="https://developers.google.com/drive/api/v3/manage-sharing#:~:text=Permissions%20can%20be%20granted,the%20file%20or%20folder."
               target="_blank"
             >
-              This can be because they already had a more permissive role.
+              <Text id="notReflected2">This can be because they already had a more permissive role.</Text>
             </a>
             <ul>
               {notReflected.map(({ displayName, emailAddress, role }) => (
@@ -289,23 +355,38 @@ export default class App extends Component<{}, AppState> {
 
   render() {
     return (
-      <main>
-        <h1>Google Docs Batch Invite</h1>
-        <p>Share your Google Docs (and any files on Google Drive) with multiple users at once.</p>
-        <p>
-          © 2022 Yusuke Kido [<a href="https://github.com/kissge/google-docs-batch-invite">Source on GitHub</a>]
-        </p>
+      <IntlProvider definition={this.state.i18n}>
+        <main>
+          <select
+            value={this.state.language}
+            onChange={(event) => this.switchLanguage((event.target as HTMLSelectElement).value)}
+          >
+            {Languages.map(({ id, name }) => (
+              <option value={id}>{name}</option>
+            ))}
+          </select>
 
-        {!this.state.tokenClient || !this.state.isGapiLoaded
-          ? this.renderLoading()
-          : !this.state.accessToken
-          ? this.renderAuthorize()
-          : !this.state.selectedDocument
-          ? this.renderChoose()
-          : !this.state.result
-          ? this.renderBatchInvite()
-          : this.renderResult()}
-      </main>
+          <h1>Google Docs Batch Invite</h1>
+          <p>
+            <Text id="appDescription">
+              Share your Google Docs (and any files on Google Drive) with multiple users at once.
+            </Text>
+          </p>
+          <p>
+            © 2022 Yusuke Kido [<a href="https://github.com/kissge/google-docs-batch-invite">Source on GitHub</a>]
+          </p>
+
+          {!this.state.tokenClient || !this.state.isGapiLoaded
+            ? this.renderLoading()
+            : !this.state.accessToken
+            ? this.renderAuthorize()
+            : !this.state.selectedDocument
+            ? this.renderChoose()
+            : !this.state.result
+            ? this.renderBatchInvite()
+            : this.renderResult()}
+        </main>
+      </IntlProvider>
     );
   }
 }

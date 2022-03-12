@@ -88,3 +88,7 @@ pre {
   padding: 1.5em;
   background: #f1f6d3;
 }
+
+select {
+  float: right;
+}

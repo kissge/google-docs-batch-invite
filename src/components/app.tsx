@@ -19,7 +19,7 @@ export default class App extends Component<{}, AppState> {
     i18n: {},
   };
 
-  componentWillMount() {
+  componentDidMount() {
     for (const languageString of navigator.languages) {
       const language = languageString.split('-')[0];
       if (isLanguage(language)) {
@@ -27,9 +27,7 @@ export default class App extends Component<{}, AppState> {
         break;
       }
     }
-  }
 
-  componentDidMount() {
     this.loadExternalScript('https://apis.google.com/js/api.js', () => {
       gapi.load('client:picker', async () => {
         await gapi.client.init({});
@@ -303,7 +301,7 @@ export default class App extends Component<{}, AppState> {
     }
 
     const notReflected = Object.values(this.state.result).flatMap(({ result }) => {
-      if (!('error' in result) && result.role !== this.state.role) {
+      if (!('error' in result) && result.role !== this.state.role && result.role) {
         return [result];
       }
 

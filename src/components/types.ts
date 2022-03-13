@@ -6,6 +6,9 @@ export enum Role {
   organizer = 'organizer',
   owner = 'owner',
 }
+export function isRole(x: string | null): x is Role {
+  return x != null && x in Role;
+}
 
 export interface AppState {
   isGapiLoaded: boolean;

@@ -1,7 +1,7 @@
 import { Component, h, Fragment } from 'preact';
 import { IntlProvider, Text, Localizer, translate } from 'preact-i18n';
 import { config } from './config';
-import { type AppState, Role, isLanguage, Languages } from './types';
+import { type AppState, Role, isLanguage, Languages, isRole } from './types';
 
 export default class App extends Component<{}, AppState> {
   state: Readonly<AppState> = {
@@ -20,6 +20,15 @@ export default class App extends Component<{}, AppState> {
   };
 
   componentDidMount() {
+    if (localStorage.getItem('role')) {
+      const role = localStorage.getItem('role');
+      this.setState({
+        users: localStorage.getItem('users') || this.state.users,
+        role: isRole(role) ? role : this.state.role,
+        sendNotificationEmail: localStorage.getItem('sendNotificationEmail') !== 'false',
+      });
+    }
+
     for (const languageString of navigator.languages) {
       const language = languageString.split('-')[0];
       if (isLanguage(language)) {
@@ -47,6 +56,12 @@ export default class App extends Component<{}, AppState> {
           },
         }),
       });
+    });
+  }
+
+  componentDidUpdate() {
+    (['users', 'role', 'sendNotificationEmail'] as const).forEach((key) => {
+      localStorage.setItem(key, String(this.state[key]));
     });
   }
 

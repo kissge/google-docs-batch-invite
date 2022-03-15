@@ -1,7 +1,7 @@
 {
-  "name": "google-docs-batch-invite",
+  "name": "Google Docs Batch Invite",
   "short_name": "google-docs-batch-invite",
-  "start_url": "/",
+  "start_url": "/google-docs-batch-invite",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#fff",

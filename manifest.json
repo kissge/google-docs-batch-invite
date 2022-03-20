@@ -1,9 +1,21 @@
 {
   "name": "Google Docs Batch Invite",
-  "short_name": "google-docs-batch-invite",
-  "start_url": "/google-docs-batch-invite",
+  "short_name": "Google Docs Batch Invite",
+  "start_url": "/google-docs-batch-invite/",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#fff",
-  "theme_color": "#673ab8"
+  "theme_color": "#673ab8",
+  "icons": [
+    {
+      "src": "https://kissge.github.io/shared/me-192.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "https://kissge.github.io/shared/me-512.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ]
 }
